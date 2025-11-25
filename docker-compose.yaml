@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # Porta para comunicação (Python vai usar essa)
+      - "15672:15672" # Interface visual (para você ver as mensagens chegando)
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
