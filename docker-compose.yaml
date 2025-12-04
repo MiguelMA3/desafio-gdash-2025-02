@@ -1,40 +1,89 @@
-version: '3.8'
-
 services:
-  # --- Fila ---
+  # --- Infraestrutura ---
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: weather-rabbitmq
     ports:
-      - "5672:5672"   # Porta para comunicação (Python vai usar essa)
-      - "15672:15672" # Interface visual (para você ver as mensagens chegando)
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+        test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
 
-  # --- Banco de Dados ---
   mongodb:
-    image: mongo:6.0
-    container_name: gdash_mongodb
+    image: mongo
+    container_name: weather-mongodb
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - mongo_data:/data/db
+      - mongo-data:/data/db
 
-  # --- Visualizador do Banco ---
   mongo-express:
     image: mongo-express
-    container_name: gdash_mongo_express
+    container_name: weather-mongo-express
     ports:
       - "8081:8081"
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_URL: mongodb://root:password@mongodb:27017/
+      ME_CONFIG_MONGODB_SERVER: mongodb
     depends_on:
       - mongodb
 
+  # --- Aplicações ---
+  
+  # 1. API Backend (NestJS)
+  api:
+    build: ./weather-api
+    container_name: weather-api
+    ports:
+      - "3000:3000"
+    environment:
+      # Observe: usamos 'mongodb' (nome do service acima) em vez de localhost
+      MONGO_URI: mongodb://mongodb:27017/weather
+      JWT_SECRET: segredo_super_secreto_do_desafio
+    depends_on:
+      - mongodb
+
+  # 2. Worker (Go)
+  worker:
+    build: ./weather-worker
+    container_name: weather-worker
+    environment:
+      # Observe: usamos 'rabbitmq' e 'api' como hostnames
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      # O worker precisa saber onde a API está para fazer o POST
+      # Você terá que verificar se o seu código Go usa uma ENV para a URL da API também.
+      # Se estiver chumbado 'localhost:3000' no Go, precisará trocar para 'http://api:3000'
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+  # 3. Collector (Python)
+  collector:
+    build: ./weather-collector
+    container_name: weather-collector
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      # Lembre-se de colocar sua OPENWEATHER_API_KEY aqui ou no .env dele
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  # 4. Frontend (React)
+  frontend:
+    build: ./weather-frontend
+    container_name: weather-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # O Frontend roda no navegador do usuário, então ele acessa a API via localhost (porta exposta 3000)
+      # Mas no build time pode precisar saber algo. Geralmente React usa .env files prefixados com VITE_
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - api
+
 volumes:
-  mongo_data:
+  mongo-data:

@@ -1,6 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service'; // Você precisará criar este service
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -10,15 +10,18 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
+  // Verifica se usuário e senha batem
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.usersService.findOne(username);
-    if (user && await bcrypt.compare(pass, user.password)) {
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      // Retorna o usuário sem a senha
       const { password, ...result } = user.toObject();
       return result;
     }
     return null;
   }
 
+  // Gera o Token JWT
   async login(user: any) {
     const payload = { username: user.username, sub: user._id };
     return {

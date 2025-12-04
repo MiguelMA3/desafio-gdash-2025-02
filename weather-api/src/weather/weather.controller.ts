@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Res, Header } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { WeatherService } from './weather.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';

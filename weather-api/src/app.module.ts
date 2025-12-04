@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { WeatherModule } from './weather/weather.module'; // Vamos criar isso já já
+import { WeatherModule } from './weather/weather.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // 1. Configura Leitura de .env
-    ConfigModule.forRoot({
-      isGlobal: true, 
-    }),
-    // 2. Configura Mongoose (Banco de dados)
+    ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -17,10 +15,9 @@ import { WeatherModule } from './weather/weather.module'; // Vamos criar isso j�
       }),
       inject: [ConfigService],
     }),
-    // 3. Módulo de Clima (que criaremos a seguir)
     WeatherModule,
+    AuthModule,
+    UsersModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}

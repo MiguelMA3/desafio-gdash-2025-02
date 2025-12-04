@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -21,15 +22,21 @@ type WeatherData struct {
 	Timestamp     string  `json:"timestamp"`
 }
 
-// URL da API NestJS (rodando localmente na porta 3000)
-// Se estivesse dentro do Docker, seria http://weather-api:3000/weather,
-// mas como você está rodando no terminal, localhost funciona.
-const apiURL = "http://localhost:3000/weather"
+// Variável global para armazenar a URL da API (será definida no main)
+var apiURL string
 
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Panicf("%s: %s", msg, err)
 	}
+}
+
+// Função auxiliar para ler variáveis de ambiente com valor padrão
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }
 
 // Função para enviar os dados para a API NestJS
@@ -46,30 +53,51 @@ func sendToAPI(data []byte) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("❌ Erro ao enviar para API: %v", err)
+		log.Printf("❌ Erro ao enviar para API (%s): %v", apiURL, err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		log.Printf("✅ Sucesso! Dados salvos na API (Status: %d)", resp.StatusCode)
+		log.Printf("✅ Sucesso! Dados salvos na API. Status: %d", resp.StatusCode)
 	} else {
 		log.Printf("⚠️ API retornou erro: Status %d", resp.StatusCode)
 	}
 }
 
 func main() {
-	// 1. Conectar ao RabbitMQ
-	connStr := "amqp://user:password@localhost:5672/"
-	conn, err := amqp.Dial(connStr)
-	failOnError(err, "Falha ao conectar ao RabbitMQ")
+	// 1. Configuração Dinâmica (Docker vs Local)
+	// Se estiver no Docker, usará os nomes dos serviços. Se local, usa localhost.
+	rabbitURL := getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+	
+	// Configura a URL base da API
+	apiBase := getEnv("API_URL", "http://localhost:3000")
+	apiURL = apiBase + "/weather" // Constrói a URL completa
+
+	log.Printf("🔌 Conectando ao RabbitMQ em: %s", rabbitURL)
+	log.Printf("📡 API alvo configurada para: %s", apiURL)
+
+	// 2. Conectar ao RabbitMQ com Retry (importante para Docker, pois o Rabbit pode demorar a subir)
+	var conn *amqp.Connection
+	var err error
+
+	// Tenta conectar 5 vezes antes de desistir
+	for i := 0; i < 5; i++ {
+		conn, err = amqp.Dial(rabbitURL)
+		if err == nil {
+			break
+		}
+		log.Printf("⚠️ Falha ao conectar (tentativa %d/5). Retentando em 2s...", i+1)
+		time.Sleep(2 * time.Second)
+	}
+	failOnError(err, "Falha ao conectar ao RabbitMQ após várias tentativas")
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	failOnError(err, "Falha ao abrir um canal")
 	defer ch.Close()
 
-	// 2. Garantir que a fila existe
+	// 3. Garantir que a fila existe
 	q, err := ch.QueueDeclare(
 		"weather_data", // nome da fila
 		true,           // durable
@@ -80,7 +108,7 @@ func main() {
 	)
 	failOnError(err, "Falha ao declarar a fila")
 
-	// 3. Configurar o consumidor
+	// 4. Configurar o consumidor
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer tag
@@ -92,14 +120,14 @@ func main() {
 	)
 	failOnError(err, "Falha ao registrar o consumidor")
 
-	// 4. Loop infinito
-	var forever chan struct{}
+	// 5. Loop infinito de processamento
+	forever := make(chan struct{})
 
 	go func() {
 		for d := range msgs {
 			log.Printf("📥 Recebido da fila: %s", d.Body)
 
-			// Validar se é um JSON válido (opcional, mas bom pra segurança)
+			// Validar se é um JSON válido
 			var data WeatherData
 			err := json.Unmarshal(d.Body, &data)
 			if err != nil {
