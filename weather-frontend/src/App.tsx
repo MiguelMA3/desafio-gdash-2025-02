@@ -20,7 +20,7 @@ function App() {
   const [insight, setInsight] = useState<AIInsight | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = 'https://upgraded-umbrella-67rjr6644jp3x4gj-3000.app.github.dev'; 
+  const API_BASE = 'https://upgraded-umbrella-67rjr6644jp3x4gj-3000.app.github.dev';
 
   const fetchData = async () => {
     try {
@@ -51,6 +51,29 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleDownload = async () => {
+    try {
+      // Usando fetch para preparar para a Autenticação (passaremos headers depois)
+      const response = await fetch(`${API_BASE}/weather/export`, {
+        method: 'GET',
+        // headers: { 'Authorization': `Bearer ${token}` } // Futuro
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `relatorio_clima_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    } catch (error) {
+      console.error("Erro ao baixar CSV", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-8 font-sans">
       <div className="max-w-5xl mx-auto">
@@ -58,6 +81,12 @@ function App() {
           <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
             🌤️ GDASH Monitor <span className="text-sm font-normal text-slate-500 bg-slate-200 px-2 py-1 rounded">v1.0</span>
           </h1>
+          <button
+            onClick={handleDownload}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+          >
+            📂 Exportar CSV
+          </button>
         </header>
 
         {loading && !insight ? (

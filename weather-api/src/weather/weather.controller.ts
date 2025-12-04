@@ -1,5 +1,8 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Header } from '@nestjs/common';
+import { Response } from 'express';
 import { WeatherService } from './weather.service';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('weather')
 export class WeatherController {
@@ -10,6 +13,7 @@ export class WeatherController {
     return this.weatherService.create(createWeatherDto);
   }
 
+  @UseGuards(AuthGuard('jwt')) // Protege TODAS as rotas abaixo
   @Get('insights')
   getInsights() {
     return this.weatherService.generateInsights();
@@ -18,5 +22,13 @@ export class WeatherController {
   @Get()
   findAll() {
     return this.weatherService.findAll();
+  }
+
+  @Get('export')
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="clima_log.csv"')
+  async exportCsv(@Res() res: Response) {
+    const csvData = await this.weatherService.getCsvData();
+    res.send(csvData);
   }
 }

@@ -70,4 +70,22 @@ export class WeatherService {
       generated_at: new Date()
     };
   }
+
+  // Adicione dentro da classe WeatherService
+
+async getCsvData(): Promise<string> {
+  const logs = await this.weatherModel.find().sort({ createdAt: -1 }).limit(1000).exec();
+  
+  // Cabeçalho do CSV
+  const header = 'ID,Data,Temperatura (C),Umidade (%),Vento (km/h)\n';
+  
+  // Linhas
+  const rows = logs.map(log => {
+    // Formatar data para ISO ou pt-BR
+    const date = new Date(log['createdAt']).toISOString(); 
+    return `${log._id},${date},${log.temp_c},${log.humidity},${log.wind_speed}`;
+  }).join('\n');
+
+  return header + rows;
+}
 }
