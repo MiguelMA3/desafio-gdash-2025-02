@@ -95,7 +95,7 @@ def main():
         # O desafio pede "periodicamente". Para teste rápido, coloquei 30 segundos.
         # No produção real, poderia ser 1 hora (3600 segundos).
         print("Aguardando próxima coleta...")
-        time.sleep(900)
+        time.sleep(30)
 
 if __name__ == "__main__":
     main()

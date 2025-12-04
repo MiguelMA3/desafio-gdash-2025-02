@@ -68,11 +68,10 @@ func sendToAPI(data []byte) {
 func main() {
 	// 1. Configuração Dinâmica (Docker vs Local)
 	// Se estiver no Docker, usará os nomes dos serviços. Se local, usa localhost.
-	rabbitURL := getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+	rabbitURL := getEnv("RABBITMQ_URL", "amqp://user:password@rabbitmq:5672/")
 	
 	// Configura a URL base da API
-	apiBase := getEnv("API_URL", "http://localhost:3000")
-	apiURL = apiBase + "/weather" // Constrói a URL completa
+	const apiURL = "http://weather-api:3000/weather"
 
 	log.Printf("🔌 Conectando ao RabbitMQ em: %s", rabbitURL)
 	log.Printf("📡 API alvo configurada para: %s", apiURL)
