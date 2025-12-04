@@ -207,7 +207,7 @@ function App() {
                     <div className="mt-4 bg-white/10 p-3 rounded-lg text-sm text-indigo-100">
                       <strong>Detalhes:</strong>
                       <ul className="list-disc pl-5 mt-1 space-y-1">
-                        {insight.details.map((det, idx) => <li key={idx}>{det}</li>)}
+                        {insight.details?.map((det, idx) => <li key={idx}>{det}</li>)}
                       </ul>
                     </div>
                   </div>
@@ -238,7 +238,7 @@ function App() {
                     <tr><th className="px-6 py-3">Horário</th><th className="px-6 py-3">Temp</th></tr>
                   </thead>
                   <tbody>
-                    {logs.slice(0, 5).map((log) => (
+                    {logs?.slice(0, 5).map((log) => (
                       <tr key={log._id} className="border-b">
                          <td className="px-6 py-4">{new Date(log.timestamp).toLocaleTimeString()}</td>
                          <td className="px-6 py-4">{log.temp_c}°C</td>

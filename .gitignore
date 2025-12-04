@@ -1,6 +1,22 @@
-# Arquivos de Sistema/IDE (Raiz)
+# --- Geral ---
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# --- Python (Coletor) ---
+weather-collector/__pycache__/
+weather-collector/.venv/
+weather-collector/.env
+
+# --- Node.js (API e Frontend) ---
+weather-api/node_modules/
+weather-api/dist/
+weather-api/.env
+weather-frontend/node_modules/
+weather-frontend/dist/
+weather-frontend/.env
+
+# --- Go (Worker) ---
+weather-worker/weather-worker (binário compilado)
