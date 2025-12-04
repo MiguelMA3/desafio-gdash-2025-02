@@ -1,16 +1,21 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { WeatherService } from './weather.service';
 
-@Controller('weather') // Isso define a rota base como /weather
+@Controller('weather')
 export class WeatherController {
   constructor(private readonly weatherService: WeatherService) {}
 
-  @Post() // POST /weather
+  @Post()
   create(@Body() createWeatherDto: any) {
     return this.weatherService.create(createWeatherDto);
   }
 
-  @Get() // GET /weather
+  @Get('insights')
+  getInsights() {
+    return this.weatherService.generateInsights();
+  }
+
+  @Get()
   findAll() {
     return this.weatherService.findAll();
   }
