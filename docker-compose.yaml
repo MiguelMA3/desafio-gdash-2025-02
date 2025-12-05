@@ -6,6 +6,9 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
     healthcheck:
         test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
         interval: 10s
@@ -51,7 +54,7 @@ services:
     container_name: weather-worker
     environment:
       # Observe: usamos 'rabbitmq' e 'api' como hostnames
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672/
       # O worker precisa saber onde a API está para fazer o POST
       # Você terá que verificar se o seu código Go usa uma ENV para a URL da API também.
       # Se estiver chumbado 'localhost:3000' no Go, precisará trocar para 'http://api:3000'
@@ -66,8 +69,13 @@ services:
     build: ./weather-collector
     container_name: weather-collector
     environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      # Lembre-se de colocar sua OPENWEATHER_API_KEY aqui ou no .env dele
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: user
+      RABBITMQ_PASS: password
+      QUEUE_NAME: weather_data
+      LATITUDE: -25.52
+      LONGITUDE: -48.51
     depends_on:
       rabbitmq:
         condition: service_healthy

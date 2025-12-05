@@ -71,7 +71,7 @@ func main() {
 	rabbitURL := getEnv("RABBITMQ_URL", "amqp://user:password@rabbitmq:5672/")
 	
 	// Configura a URL base da API
-	const apiURL = "http://weather-api:3000/weather"
+	apiURL = "http://weather-api:3000/weather"
 
 	log.Printf("🔌 Conectando ao RabbitMQ em: %s", rabbitURL)
 	log.Printf("📡 API alvo configurada para: %s", apiURL)
