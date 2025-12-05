@@ -9,5 +9,5 @@ COPY . .
 
 EXPOSE 5173
 
-# '--host' é essencial para acessar o frontend fora do docker
+# '--host' para acessar o frontend fora do docker
 CMD ["npm", "run", "dev", "--", "--host"]

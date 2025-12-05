@@ -42,7 +42,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Observe: usamos 'mongodb' (nome do service acima) em vez de localhost
       MONGO_URI: mongodb://mongodb:27017/weather
       JWT_SECRET: segredo_super_secreto_do_desafio
     depends_on:
@@ -53,11 +52,7 @@ services:
     build: ./weather-worker
     container_name: weather-worker
     environment:
-      # Observe: usamos 'rabbitmq' e 'api' como hostnames
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672/
-      # O worker precisa saber onde a API está para fazer o POST
-      # Você terá que verificar se o seu código Go usa uma ENV para a URL da API também.
-      # Se estiver chumbado 'localhost:3000' no Go, precisará trocar para 'http://api:3000'
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -87,8 +82,6 @@ services:
     ports:
       - "5173:5173"
     environment:
-      # O Frontend roda no navegador do usuário, então ele acessa a API via localhost (porta exposta 3000)
-      # Mas no build time pode precisar saber algo. Geralmente React usa .env files prefixados com VITE_
       VITE_API_URL: http://localhost:3000
     depends_on:
       - api

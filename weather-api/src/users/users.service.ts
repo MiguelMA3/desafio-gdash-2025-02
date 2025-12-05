@@ -8,7 +8,6 @@ import * as bcrypt from 'bcrypt';
 export class UsersService implements OnModuleInit {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  // Executa quando o sistema inicia
   async onModuleInit() {
     // Verifica se já existe algum usuário, se não, cria o admin padrão
     const adminExists = await this.findOne('admin');

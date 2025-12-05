@@ -9,7 +9,7 @@ export class User {
   username: string;
 
   @Prop({ required: true })
-  password: string; // Senha criptografada
+  password: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

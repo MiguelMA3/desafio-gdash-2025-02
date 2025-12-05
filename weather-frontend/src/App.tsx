@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-// --- Interfaces ---
 interface WeatherLog {
   _id: string;
   temp_c: number;
@@ -16,7 +15,6 @@ interface AIInsight {
 }
 
 function App() {
-  // --- Estados ---
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +24,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Use a URL correta do seu ambiente
-  const API_BASE = 'https://upgraded-umbrella-67rjr6644jp3x4gj-3000.app.github.dev';
+  // Use a URL do seu ambiente
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   // --- Funções de Autenticação ---
   
@@ -68,10 +66,8 @@ function App() {
 
     // setLoading(true); // Opcional: pode causar flicker se polling for rápido
     try {
-      // Passamos o token no header Authorization
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // 1. Buscar Logs
       const resLogs = await fetch(`${API_BASE}/weather`, { headers });
       if (resLogs.status === 401) { handleLogout(); return; } // Token expirou
       if (resLogs.ok) {
@@ -79,7 +75,6 @@ function App() {
         if (Array.isArray(dataLogs)) setLogs(dataLogs);
       }
 
-      // 2. Buscar Insights
       const resInsight = await fetch(`${API_BASE}/weather/insights`, { headers });
       if (resInsight.ok) {
         const dataInsight = await resInsight.json();
@@ -97,7 +92,7 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}/weather/export`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` } // Token aqui também!
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
@@ -168,7 +163,7 @@ function App() {
     );
   }
 
-  // 2. Se tiver token, mostra o DASHBOARD (seu código original com melhorias)
+  // 2. Se tiver token, mostra o DASHBOARD
   return (
     <div className="min-h-screen bg-slate-100 p-8 font-sans">
       <div className="max-w-5xl mx-auto">
@@ -196,7 +191,6 @@ function App() {
           <div className="text-center py-10 text-slate-500">Carregando dados...</div>
         ) : (
           <div className="space-y-6">
-            {/* Componente de Insight */}
             {insight && (
               <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
                 <div className="flex items-start gap-4">
@@ -215,7 +209,6 @@ function App() {
               </div>
             )}
 
-            {/* Grid de Métricas */}
             <div className="grid gap-6 md:grid-cols-3">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <p className="text-slate-500 font-medium">Temperatura</p>
@@ -231,7 +224,6 @@ function App() {
               </div>
             </div>
             
-            {/* Tabela Simplificada */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                <table className="w-full text-sm text-left">
                   <thead className="text-xs text-slate-500 uppercase bg-slate-50">

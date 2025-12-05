@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type WeatherDocument = HydratedDocument<Weather>;
 
-@Schema({ timestamps: true }) // timestamps cria created_at e updated_at automático
+@Schema({ timestamps: true })
 export class Weather {
   @Prop({ required: true })
   latitude: number;
@@ -24,7 +24,7 @@ export class Weather {
   condition_code: number;
 
   @Prop()
-  timestamp: string; // Data original da coleta
+  timestamp: string;
 }
 
 export const WeatherSchema = SchemaFactory.createForClass(Weather);

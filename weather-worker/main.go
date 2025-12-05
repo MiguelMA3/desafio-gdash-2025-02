@@ -41,7 +41,6 @@ func getEnv(key, fallback string) string {
 
 // Função para enviar os dados para a API NestJS
 func sendToAPI(data []byte) {
-	// Cria uma requisição POST com o JSON recebido da fila
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(data))
 	if err != nil {
 		log.Printf("❌ Erro ao criar requisição: %v", err)
@@ -111,7 +110,7 @@ func main() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer tag
-		true,   // auto-ack
+		true,   // auto-ack (confirmação automática)
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -126,7 +125,6 @@ func main() {
 		for d := range msgs {
 			log.Printf("📥 Recebido da fila: %s", d.Body)
 
-			// Validar se é um JSON válido
 			var data WeatherData
 			err := json.Unmarshal(d.Body, &data)
 			if err != nil {
@@ -134,7 +132,6 @@ func main() {
 				continue
 			}
 
-			// Enviar para a API NestJS
 			sendToAPI(d.Body)
 		}
 	}()

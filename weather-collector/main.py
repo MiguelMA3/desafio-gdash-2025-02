@@ -5,10 +5,9 @@ import requests
 import pika
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env
 load_dotenv()
 
-# Configurações
+# Configurações do RabbitMQ
 RABBIT_HOST = os.getenv('RABBITMQ_HOST')
 RABBIT_PORT = int(os.getenv('RABBITMQ_PORT'))
 RABBIT_USER = os.getenv('RABBITMQ_USER')
@@ -26,10 +25,9 @@ def get_weather_data():
         url = f"https://api.open-meteo.com/v1/forecast?latitude={LATITUDE}&longitude={LONGITUDE}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=America%2FSao_Paulo"
         
         response = requests.get(url, timeout=10)
-        response.raise_for_status() # Lança erro se a requisição falhar
+        response.raise_for_status()
         data = response.json()
         
-        # Extraindo e normalizando os dados para o formato que queremos
         current = data.get('current', {})
         
         payload = {
@@ -56,19 +54,15 @@ def get_weather_data():
 def send_to_queue(payload):
     """Envia o JSON para o RabbitMQ"""
     try:
-        # Conexão com o RabbitMQ
         credentials = pika.PlainCredentials(RABBIT_USER, RABBIT_PASS)
         parameters = pika.ConnectionParameters(host=RABBIT_HOST, port=RABBIT_PORT, credentials=credentials)
         connection = pika.BlockingConnection(parameters)
         channel = connection.channel()
 
-        # Garante que a fila existe
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
 
-        # Transforma o dicionário em JSON string
         message_body = json.dumps(payload)
 
-        # Publica
         channel.basic_publish(
             exchange='',
             routing_key=QUEUE_NAME,

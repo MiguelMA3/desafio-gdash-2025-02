@@ -13,7 +13,7 @@ export class WeatherController {
     return this.weatherService.create(createWeatherDto);
   }
 
-  @UseGuards(AuthGuard('jwt')) // Protege TODAS as rotas abaixo
+  @UseGuards(AuthGuard('jwt')) // Protege as rotas abaixo
   @Get('insights')
   getInsights() {
     return this.weatherService.generateInsights();

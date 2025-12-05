@@ -7,7 +7,7 @@ import { Weather, WeatherDocument } from './entities/weather.entity';
 export class WeatherService {
   constructor(
     @InjectModel(Weather.name) private weatherModel: Model<WeatherDocument>,
-  ) {}
+  ) { }
 
   async create(createWeatherDto: any) {
     const createdWeather = new this.weatherModel(createWeatherDto);
@@ -18,7 +18,6 @@ export class WeatherService {
     return this.weatherModel.find().sort({ createdAt: -1 }).limit(100).exec();
   }
 
-  // --- NOVO MÉTODO: Lógica de "IA" ---
   async generateInsights() {
     // 1. Pega o dado mais recente
     const lastLog = await this.weatherModel.findOne().sort({ createdAt: -1 }).exec();
@@ -35,7 +34,7 @@ export class WeatherService {
     let insights: { msg: string; type: string }[] = [];
 
     // 2. Regras de inferência (Expert System)
-    
+
     // Análise de Temperatura
     if (temp_c > 30) {
       insights.push({ msg: "Calor extremo detectado! Mantenha-se hidratado. 🥵", type: "danger" });
@@ -60,9 +59,9 @@ export class WeatherService {
     }
 
     // Retorna o insight mais prioritário (Danger > Warning > Info)
-    const priority = insights.find(i => i.type === 'danger') || 
-                     insights.find(i => i.type === 'warning') || 
-                     insights[0];
+    const priority = insights.find(i => i.type === 'danger') ||
+      insights.find(i => i.type === 'warning') ||
+      insights[0];
 
     return {
       summary: priority.msg,
@@ -71,21 +70,16 @@ export class WeatherService {
     };
   }
 
-  // Adicione dentro da classe WeatherService
+  async getCsvData(): Promise<string> {
+    const logs = await this.weatherModel.find().sort({ createdAt: -1 }).limit(1000).exec();
 
-async getCsvData(): Promise<string> {
-  const logs = await this.weatherModel.find().sort({ createdAt: -1 }).limit(1000).exec();
-  
-  // Cabeçalho do CSV
-  const header = 'ID,Data,Temperatura (C),Umidade (%),Vento (km/h)\n';
-  
-  // Linhas
-  const rows = logs.map(log => {
-    // Formatar data para ISO ou pt-BR
-    const date = new Date(log['createdAt']).toISOString(); 
-    return `${log._id},${date},${log.temp_c},${log.humidity},${log.wind_speed}`;
-  }).join('\n');
+    const header = 'ID,Data,Temperatura (C),Umidade (%),Vento (km/h)\n';
 
-  return header + rows;
-}
+    const rows = logs.map(log => {
+      const date = new Date(log['createdAt']).toISOString();
+      return `${log._id},${date},${log.temp_c},${log.humidity},${log.wind_speed}`;
+    }).join('\n');
+
+    return header + rows;
+  }
 }
